@@ -29,13 +29,15 @@ class Language(models.Model):
     language=models.CharField(max_length=200, help_text="Please enter a language")
     # it would be nice to enforce a case-insensitive uniqueness constraint
 
+    # __str__ is called when browsing the table in the admin site to avoid returning every column
     def __str__(self):
         return self.language
 
 class Book(models.Model):
     """Model representing a book (but not a specific physical copy of the book)"""
 
-    # this implements a one-to-many relationship from authors (one) to books (many). For now, we've hardcoded 'Author', but this is temporary. If the author gets deleted, this model's author value will become null. Finally, null is permitted for this column.
+    title = models.CharField('Title', max_length=100)
+    # this implements a one-to-many relationship from authors (one) to books (many). If the author gets deleted, this model's author value will become null. Finally, null is permitted for this column.
     author = models.ForeignKey('Author', on_delete=models.SET_NULL, null=True)
 
     # max_length for TextField is only enforced at form level
@@ -52,6 +54,12 @@ class Book(models.Model):
     def get_absolute_url(self):
         """Returns url to access a detail record for this book"""
         return reverse('book-detail', args=[str(self.id)])
+
+    def display_genre(self):
+        """Create a string for the Genre. This is required to display genre in Admin."""
+        return ', '.join(genre.name for genre in self.genre.all()[:3])
+
+    display_genre.short_description = "Genre"
 
 class BookInstance(models.Model):
     id= models.UUIDField(primary_key=True, default=uuid.uuid4, help_text='Unique library ID for this copy of this book')
